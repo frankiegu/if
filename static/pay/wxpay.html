@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui">
+  <meta name="screen-orientation" content="portrait"/>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="full-screen" content="yes">
+  <meta name="x5-fullscreen" content="true">
+  <title>微信支付</title>
+<body>
+<div>
+  <div id="order-ready">
+    <div>
+      <img src="images/success.svg" style="width: 30%"/>
+      <h2>订单提交成功</h2>
+      <p style="line-height: 30px;color: #999">等待支付</p>
+      <div id="order-info">
+
+      </div>
+    </div>
+  </div>
+  <div id="loadding">
+    <div>
+      <img src="images/clock.svg" style="width: 25%"/>
+      <h2>提交中,请稍后</h2>
+      <p style="line-height: 30px;color: #999">订单提交中，请稍后...</p>
+    </div>
+  </div>
+  <div id="success">
+    <div>
+      <img src="images/success.svg" style="width: 30%"/>
+      <h2>支付成功</h2>
+      <p style="line-height: 30px;color: #999">请等待工作人员与您联系</p>
+      <div id="order-info">
+
+      </div>
+    </div>
+  </div>
+  <div id="fail">
+    <div>
+      <img src="images/fail.svg" style="width: 25%"/>
+      <h2>支付失败</h2>
+      <p style="line-height: 30px;color: #999">很抱歉，支付异常！</p>
+    </div>
+  </div>
+  <div class="pay-footer">
+    <div>
+      <span id="pay-now">立即支付</span>
+    </div>
+    <div id="next-bar">
+      <a href="/#/order"><span>订单详情</span></a>
+      <a href="/"><span>返回首页</span></a>
+    </div>
+
+  </div>
+</div>
+<style scoped>
+  #order-info {
+    margin: 10px;
+    border-radius: 10px;
+    padding: 16px;
+    background-color: white;
+  }
+
+  #order-info > p {
+    line-height: 30px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .pay-footer {
+    position: fixed;
+    bottom: 50px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .pay-footer a {
+    text-decoration: none;
+  }
+
+  .pay-footer span {
+    margin: 10px;
+    color: #69e01c;
+    border: solid #69e01c 1px;
+    /*display: block;*/
+    padding: 8px 20px 8px 20px;
+    border-radius: 25px;
+  }
+  .pay-footer #next-bar {
+    display: none;
+  }
+
+  #order-ready {
+    text-align: center;
+    margin-top: 20%;
+  }
+
+  #success, #fail, #loadding {
+    text-align: center;
+    display: none;
+    margin-top: 20%;
+  }
+
+  #pay-now {
+    color: white;
+    background-color: #69e01c;
+  }
+</style>
+
+<script type="text/javascript">
+
+  var url = 'http://api.listudio.cn/api/v2/pay/pre_order';
+  var token = getQueryString('token');
+  var data = {};//获取URL里面的参数
+  data.order_id = getQueryString('order_id');
+  data.payment = getQueryString('payment');
+  var nextBar = document.getElementById('next-bar');
+  var payNow = document.getElementById('pay-now');
+  var loadding = document.getElementById('loadding');
+  var success = document.getElementById('success');
+  var fail = document.getElementById('fail');
+  var ready = document.getElementById('order-ready');
+  var preOrder = {};
+  /**
+   * 获取url的参数
+   * @param name
+   * @returns {null}
+   */
+  function getQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]);
+    return null;
+  }
+
+  /* 封装ajax函数
+   * @param {string}opt.type http连接的方式，包括POST和GET两种方式
+   * @param {string}opt.url 发送请求的url
+   * @param {boolean}opt.async 是否为异步请求，true为异步的，false为同步的
+   * @param {object}opt.data 发送的参数，格式为对象类型
+   * @param {function}opt.success ajax发送并接收成功调用的回调函数
+   */
+  function ajax(opt) {
+    opt = opt || {};
+    opt.method = opt.method.toUpperCase() || 'POST';
+    opt.url = opt.url || '';
+    opt.async = opt.async || true;
+    opt.data = opt.data || null;
+    opt.success = opt.success || function () {
+      };
+    opt.error = opt.error || function () {
+      };
+    var xmlHttp = null;
+    if (XMLHttpRequest) {
+      xmlHttp = new XMLHttpRequest();
+    }
+    else {
+      xmlHttp = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+    var params = [];
+    for (var key in opt.data) {
+      params.push(key + '=' + opt.data[key]);
+    }
+    var postData = params.join('&');
+    if (opt.method.toUpperCase() === 'POST') {
+      xmlHttp.open(opt.method, opt.url, opt.async);
+      xmlHttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=utf-8');
+      xmlHttp.setRequestHeader('token', token);
+      xmlHttp.send(postData);
+    }
+    else if (opt.method.toUpperCase() === 'GET') {
+      xmlHttp.open(opt.method, opt.url + '?' + postData, opt.async);
+      xmlHttp.send(null);
+    }
+    xmlHttp.onreadystatechange = function () {
+      if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+        opt.success(xmlHttp.responseText);
+      }else{
+        opt.error(xmlHttp.responseText);
+      }
+    };
+  }
+
+  //点击支付去支付
+  payNow.onclick = function () {
+    //显示提交状态，隐藏订单提交成功
+    loadding.style.display = 'block';
+    ready.style.display = 'none';
+    ajax({
+      method: 'POST',
+      url: url,
+      data: data,
+      success: function (response) {
+        if(response.code == 400 ){
+          return false
+        }
+        preOrder = JSON.parse(response);
+        callpay();
+      },
+      error: function(e){
+      }
+    });
+  }
+
+
+  //调用微信JS api 支付
+  function jsApiCall() {
+    WeixinJSBridge.invoke(
+      'getBrandWCPayRequest',
+      preOrder,
+      function (res) {
+        loadding.style.display = 'none';
+        ready.style.display = 'none';
+        if (res.err_msg == "get_brand_wcpay_request:ok") {
+          // message: "微信支付成功!"
+          success.style.display = 'block';
+          payNow.style.display = 'none';
+          nextBar.style.display = 'block';
+        } else if (res.err_msg == 'get_brand_wcpay_request:cancel') {
+          ready.style.display = 'block';
+
+        } else {
+          // message: "失败微信支付!"
+          fail.style.display = 'block';
+          payNow.style.display = 'none';
+          nextBar.style.display = 'block';
+        }
+      }
+    );
+  }
+
+  function callpay() {
+    if (typeof WeixinJSBridge == "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', jsApiCall, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', jsApiCall);
+        document.attachEvent('onWeixinJSBridgeReady', jsApiCall);
+      }
+    } else {
+      jsApiCall();
+    }
+  }
+</script>
+<script type="text/javascript">
+  //获取共享地址
+  function editAddress() {
+    WeixinJSBridge.invoke(
+      'editAddress',
+      function (res) {
+        var value1 = res.proviceFirstStageName;
+        var value2 = res.addressCitySecondStageName;
+        var value3 = res.addressCountiesThirdStageName;
+        var value4 = res.addressDetailInfo;
+        var tel = res.telNumber;
+
+        alert(value1 + value2 + value3 + value4 + ":" + tel);
+      }
+    );
+  }
+
+  window.onload = function () {
+    if (typeof WeixinJSBridge == "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', editAddress, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', editAddress);
+        document.attachEvent('onWeixinJSBridgeReady', editAddress);
+      }
+    } else {
+      editAddress();
+    }
+  };
+
+</script>
+</html>

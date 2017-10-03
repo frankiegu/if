@@ -1,0 +1,8 @@
+export const USER = 'USER'
+export const ADD_CART = 'ADD_CART'
+export const ADD_CATEGORYS = 'ADD_CATEGORYS'
+export const ADD_PRODUCTS = 'ADD_PRODUCTS'
+export const UPDATE_CARTDATA = 'UPDATE_CARTDATA'
+export const UPDATE_CATE_TREE = 'UPDATE_CATE_TREE'
+export const UPDATE_CURRENT_DATE = 'UPDATE_CURRENT_DATE'
+export const UPDATE_MONTH = 'UPDATE_MONTH'
